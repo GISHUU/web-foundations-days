@@ -1,122 +1,156 @@
 let notes = [
-  { id: 1, text: "Buy milk and bread", category: "personal" },
-  { id: 2, text: "Finish the Day 3 assignment", category: "study" },
-  { id: 3, text: "Email the project report to Grace", category: "work" },
-  { id: 4, text: "Revise JavaScript arrays", category: "study" },
-  { id: 5, text: "Call mum", category: "personal" },
+    { id: 1, text: "Buy milk and bread", category: "personal" },
+    { id: 2, text: "Finish the Day 3 assignment", category: "study" },
+    { id: 3, text: "Email the project report to Grace", category: "work" },
+    { id: 4, text: "Revise JavaScript arrays", category: "study" },
+    { id: 5, text: "Call mum", category: "personal" },
 ];
 
 function searchNotes(word) {
-  return notes.filter(note =>
-    note.text.toLowerCase().includes(word.toLowerCase())
-  );
+    return notes.filter(note =>
+        note.text.toLowerCase().includes(word.toLowerCase())
+    );
 }
 
 function longestNote() {
-  if (notes.length === 0) {
-    return null;
-  }
+    if (notes.length === 0) {
+        return null;
+    }
 
-  return notes.reduce((longest, note) =>
-    note.text.length > longest.text.length ? note : longest
-  );
+    let longest = notes[0];
+
+    for (let note of notes) {
+        if (note.text.length > longest.text.length) {
+            longest = note;
+        }
+    }
+
+    return longest;
 }
 
 function countByCategory() {
-  const counts = {};
+    let counts = {};
 
-  for (const note of notes) {
-    if (!counts[note.category]) {
-      counts[note.category] = 0;
+    for (let note of notes) {
+        if (!counts[note.category]) {
+            counts[note.category] = 0;
+        }
+
+        counts[note.category]++;
     }
 
-    counts[note.category]++;
-  }
-
-  return counts;
+    return counts;
 }
 
 function getSummary() {
-  const counts = countByCategory();
-  const count = notes.length;
-  const word = count === 1 ? "note" : "notes";
+    let counts = countByCategory();
+    let total = notes.length;
+    let noteWord = total === 1 ? "note" : "notes";
 
-  return `${count} ${word}: ${counts.personal || 0} personal, ${counts.work || 0} work, ${counts.study || 0} study.`;
+    return `${total} ${noteWord}: ${counts.personal || 0} personal, ${counts.work || 0} work, ${counts.study || 0} study.`;
 }
 
 function isDuplicate(text) {
-  const normalizedText = text.trim().toLowerCase();
+    let normalizedText = text.trim().toLowerCase();
 
-  return notes.some(note =>
-    note.text.trim().toLowerCase() === normalizedText
-  );
+    return notes.some(note =>
+        note.text.trim().toLowerCase() === normalizedText
+    );
 }
 
 function addNote(text, category) {
-  if (text.length < 1 || text.length > 200) {
-    console.log("Note must be between 1 and 200 characters.");
-    return false;
-  }
+    let trimmedText = text.trim();
+    let validCategories = ["personal", "work", "study"];
 
-  if (isDuplicate(text)) {
-    console.log("Note already exists.");
-    return false;
-  }
+    if (trimmedText.length < 1 || trimmedText.length > 200) {
+        console.log("Note not added: text must be 1–200 characters.");
+        return false;
+    }
 
-  if (!["personal", "work", "study"].includes(category)) {
-    console.log("Invalid category.");
-    return false;
-  }
+    if (isDuplicate(trimmedText)) {
+        console.log("Note not added: duplicate note.");
+        return false;
+    }
 
-  const newId = notes.length + 1;
+    if (!validCategories.includes(category)) {
+        console.log("Note not added: invalid category.");
+        return false;
+    }
 
-  notes.push({
-    id: newId,
-    text: text.trim(),
-    category: category
-  });
+    let newId = notes.length > 0
+        ? Math.max(...notes.map(note => note.id)) + 1
+        : 1;
 
-  return true;
+    notes.push({
+        id: newId,
+        text: trimmedText,
+        category: category
+    });
+
+    console.log("Note added successfully.");
+    return true;
 }
 
 
-// Tests
+/* TESTS */
 
-console.log(searchNotes("day"));
-// Expected: [{ id: 2, text: "Finish the Day 3 assignment", category: "study" }]
+// searchNotes
+console.log(searchNotes("javascript"));
+// Expected: [{ id: 4, text: "Revise JavaScript arrays", category: "study" }]
 
-console.log(searchNotes("xyz"));
+console.log(searchNotes("pizza"));
 // Expected: []
 
+
+// longestNote
 console.log(longestNote());
-// Expected: note with text "Email the project report to Grace"
+// Expected: { id: 3, text: "Email the project report to Grace", category: "work" }
 
-console.log("Empty longest note test:", []);
-// Expected: [] (demonstrates an empty array, not an empty notes
-
-const originalNotes = notes;
+// Empty-array edge case for longestNote
+let savedNotes = notes;
 notes = [];
-console.log("Empty longest note test:", longestNote());
+console.log(longestNote());
 // Expected: null
-notes = originalNotes;
+notes = savedNotes;
 
+
+// countByCategory
 console.log(countByCategory());
 // Expected: { personal: 2, study: 2, work: 1 }
 
+notes = [
+    { id: 1, text: "Test personal", category: "personal" }
+];
+console.log(countByCategory());
+// Expected: { personal: 1 }
+
+notes = savedNotes;
+
+
+// getSummary
 console.log(getSummary());
 // Expected: "5 notes: 2 personal, 1 work, 2 study."
 
+notes = [
+    { id: 1, text: "One note", category: "personal" }
+];
+console.log(getSummary());
+// Expected: "1 note: 1 personal, 0 work, 0 study."
+
+notes = savedNotes;
+
+
+// isDuplicate
 console.log(isDuplicate("  BUY MILK AND BREAD  "));
 // Expected: true
 
-console.log(isDuplicate("Something completely new"));
+console.log(isDuplicate("Buy some apples"));
 // Expected: false
 
-console.log(addNote("Learn Bash scripting", "study"));
+
+// addNote
+console.log(addNote("  Buy milk and bread  ", "personal"));
+// Expected: false
+
+console.log(addNote("Complete the AWS networking lab", "study"));
 // Expected: true
-
-console.log(addNote("Buy milk and bread", "personal"));
-// Expected: false
-
-console.log(addNote("", "study"));
-// Expected: false
